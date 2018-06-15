@@ -9,8 +9,6 @@
         android:id="@+id/m1"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:maxLength="22"
-        android:hint="@string/m"
         android:gravity="center_horizontal"
         android:inputType="phone" />
 

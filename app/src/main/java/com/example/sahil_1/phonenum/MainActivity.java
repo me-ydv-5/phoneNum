@@ -3,6 +3,7 @@ package com.example.sahil_1.phonenum;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.Selection;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -40,19 +41,21 @@ public class MainActivity extends AppCompatActivity {
         m1 = findViewById(R.id.m1);
 
         // The following is the Canadian format for the phone numbers.
-        // (Country Code) - (Three digits) - (three digits) - (four digits)
-        m1.setText("+1-(   )-(   )-(    )");
+        // countryCode-(threeDigits)-threeDigits-fourDigits
+        m1.setText(getString(R.string.phone_format));
 
         // This is length() + 1 because we are keeping one index as buffer
         // to accomodate any new character that is entered. Later we again
         // bring the string to length() by deleting one character from the
         // string.
         final Integer lengthOfString = m1.getText().length() + 1;
+        Log.d("lengthOfString",Integer.toString(lengthOfString));
+        m1.setFilters(new InputFilter[] { new InputFilter.LengthFilter(lengthOfString)} );
 
         // idxArray - the array that is used to store the mutable indexes.
         // These are the indexes of the actual digits of the phone number
         // except the country code/
-        final int[] idxArray = new int[]{ 4,5,6,10,11,12,16,17,18,19 };
+        final int[] idxArray = new int[]{ 4,5,6,9,10,11,13,14,15,16 };
 
         // Set the initial pointer to the first digit in the phone number.
         Selection.setSelection(m1.getText(), idxArray[0]);
@@ -108,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     // If the last_pointer is at the end of a three digit group then the newly entered digit
                     // should go to the next group.
-                    else if(last_pointer == 7 || last_pointer == 13) {
+                    else if(last_pointer == 7 || last_pointer == 12) {
                         // Change the mutable index to the start index of the next group.
                         arrayIdx =  Arrays.binarySearch(idxArray,0, idxArray.length, last_pointer-1)+1;
 
@@ -164,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
                 // If user tries to select the string and delete all at once, nothing would
                 // happen because the string has been restored and the pointer is again at
                 // first mutable index.
-                if(s.length() < 20)
+                if(s.length() < lengthOfString-2)
                 {
                     arrayIdx = 0;
                     m1.setText(spannable.toString());
@@ -174,11 +177,11 @@ public class MainActivity extends AppCompatActivity {
                 // If only one character has been deleted, replace the character with a whitespace
                 // if the character was a mutable one, else restore the ealier string, i.e, do
                 // nothing.
-                if (s.length() < 21)
+                if (s.length() < lengthOfString-1)
                 {
                     // If the last pointer was a mutable index, change the index to a whitespace.
-                    if((last_pointer >= 5 && last_pointer <= 7) || (last_pointer >= 11 && last_pointer <= 13)
-                        || (last_pointer >= 17 && last_pointer <= 20)){
+                    if((last_pointer >= 5 && last_pointer <= 7) || (last_pointer >= 10 && last_pointer <= 12)
+                        || (last_pointer >= 14 && last_pointer <= 17)){
                         // NOTE: last_pointer is chanegd here to the current pointer. Beware!
                         last_pointer = Selection.getSelectionStart(s);
                         CharSequence t = s.subSequence(0, last_pointer) +
@@ -191,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     // Corner case when the user presses backspace from one bracket group's start position
                     // In this case, bring the pointer to the last position in the earlier bracket group.
-                    else if(last_pointer == 16 || last_pointer == 10 ) {
+                    else if(last_pointer == 9 || last_pointer == 13 ) {
                         m1.setText(spannable.toString());
                         arrayIdx = Arrays.binarySearch(idxArray,0, idxArray.length, last_pointer)-1;
                         CharSequence t = m1.getText().toString().substring(0, idxArray[arrayIdx]) +
