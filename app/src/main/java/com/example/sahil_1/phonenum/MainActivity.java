@@ -16,6 +16,11 @@ import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
+    //TODO: Create a separate TextWatcher class called PhoneNumberTextWatcher.
+    //TODO: The paramters to this textwatcher class would be the edit text
+    //TODO: I'd like to use it as m1.addTextChangeListener(new PhoneNumberTextWatcher(m1))
+    //TODO: Figureout how to keep the inter-character spacing as constant (this could be done from the layout file itself)
+
     // m1 is the View that is being used for the template.
     EditText m1;
 
@@ -55,10 +60,11 @@ public class MainActivity extends AppCompatActivity {
         // idxArray - the array that is used to store the mutable indexes.
         // These are the indexes of the actual digits of the phone number
         // except the country code/
-        final int[] idxArray = new int[]{ 4,5,6,9,10,11,13,14,15,16 };
+        final int[] idxArray = new int[]{ 4,5,6,9,10,11,13,14,15,16 };//TODO: this should go inside the textwatcher class
 
         // Set the initial pointer to the first digit in the phone number.
-        Selection.setSelection(m1.getText(), idxArray[0]);
+        Selection.setSelection(m1.getText(), idxArray[0]);//TODO: this may also go inside the textwathcer class?
+
 
         // This is the main part of this class which manipulates the string.
         m1.addTextChangedListener(new TextWatcher() {
@@ -75,13 +81,14 @@ public class MainActivity extends AppCompatActivity {
                 if (s.length() == lengthOfString)
                 {
                     // If the number entered is among the mutable index, accomodate it.
-                    if (Arrays.binarySearch(idxArray, 0, idxArray.length, last_pointer ) >= 0){
+                    if (Arrays.binarySearch(idxArray, 0, idxArray.length, last_pointer ) >= 0) {//TODO: put this in a separate function (improves readability)
 
                         // Construct a new string of length = lengthOfString-1
                         // finalString = substring from zeroth index to the last pointer's location +
                         // character at the last pointer's loc (because this is the newly entered char) +
                         // substring after the last pointer's loc except it's first element (because
                         // this element is now replaced by the newly entered element)
+                        //TODO: Use a different variable name as compared to "t" (somthing that makes sense)
                         CharSequence t = s.subSequence(0, last_pointer) +
                                 String.valueOf(s.toString().charAt(last_pointer))
                                 + s.subSequence(last_pointer +2, s.length());
@@ -89,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
                         m1.setText(t);
 
                         // Move the arrayIdx to the next index.
+                        //TODO: you may want to use this from the previously declared function (reusability)
                         arrayIdx = Arrays.binarySearch(idxArray,0, idxArray.length, last_pointer)+1;
 
                         // If end of the idxArray is not reached, set the pointer to arrayIdx.
@@ -111,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     // If the last_pointer is at the end of a three digit group then the newly entered digit
                     // should go to the next group.
-                    else if(last_pointer == 7 || last_pointer == 12) {
+                    else if(last_pointer == 7 || last_pointer == 12) { //TODO: never use integer constants. Instead, use a named constant like START_BRACKET_INDEX (declared somewhere as 7)
                         // Change the mutable index to the start index of the next group.
                         arrayIdx =  Arrays.binarySearch(idxArray,0, idxArray.length, last_pointer-1)+1;
 
@@ -120,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
                         // the digit entered by the user +
                         // remaining string of old string except the first element of the next group
                         // which is to be replaced.
+                        //TODO: Change variable name
                         CharSequence t = spannable.toString().subSequence(0, idxArray[arrayIdx])
                                 + String.valueOf(s.toString().charAt(last_pointer))
                                 + spannable.toString().subSequence(idxArray[arrayIdx]+1, spannable.toString().length());
@@ -127,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
                         // Set this string as the view.
                         m1.setText(t);
                         // Point the mutable index to next digit and set selection there.
-                        arrayIdx++;
+                        arrayIdx++;//TODO: Thought it is not much significant here, ++variable is actually faster than variable++
                         Selection.setSelection(m1.getText(), idxArray[arrayIdx]);
                     }
                     // If the changed index is not mutable then restore the earlier string.
@@ -190,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                         m1.setText(t);
                         Selection.setSelection(m1.getText(), last_pointer);
                         // Update the array index to the pointer where last pointer is currently.
-                        arrayIdx = Arrays.binarySearch(idxArray,0, idxArray.length, last_pointer);
+                        arrayIdx = Arrays.binarySearch(idxArray,0, idxArray.length, last_pointer);//TODO - separate function
                     }
                     // Corner case when the user presses backspace from one bracket group's start position
                     // In this case, bring the pointer to the last position in the earlier bracket group.
