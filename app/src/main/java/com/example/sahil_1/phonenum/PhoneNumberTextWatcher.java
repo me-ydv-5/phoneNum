@@ -139,11 +139,9 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
                 // + the digit entered by the user
                 // + remaining string of old string except the first element of the next group
                 //   which is to be replaced.
-                int length = spannable.toString().length();
-                Log.d("length", Integer.toString(length));
                 CharSequence newNumber = spannable.toString().subSequence(0, idxArray[arrayIdx])
                         + String.valueOf(s.toString().charAt(last_pointer))
-                        + spannable.toString().subSequence(idxArray[arrayIdx]+1, length);
+                        + spannable.toString().subSequence(idxArray[arrayIdx]+1, lengthOfString-1);
 
                 // Set this string as the view.
                 editView.setText(newNumber);
