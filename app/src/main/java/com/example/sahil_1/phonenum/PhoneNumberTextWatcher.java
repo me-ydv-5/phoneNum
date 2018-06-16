@@ -175,7 +175,7 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
         // Example: If user 'SELECT ALL' the string and hit backspace, more than two
         // characters are being deleted at that moment, which it avoid by this.
         if(s.length() < LENGTH_OF_STRING-2) {
-            // Sets the pointer in sIndexArray to the zeroth index.
+            // Sets the pointer index in sIndexArray to be the zeroth index.
             mArrayIdx = 0;
 
             // Restores the string to earlier one
@@ -205,7 +205,8 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
         // After Deletion: +1 (12|X) 456-7890   => mLastPointer will be taken as 9
         //                                         as explained above.
         //
-        // else if the selection is at any other place, leave everything as is.
+        // else leave everything as it is. (the selection is at any other place than the
+        // above two cases)
         //
         // Example:
         // Earlier String: +1| (123) 456-7890   => Trying to delete "1" in country code.
@@ -213,18 +214,17 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
 
         if (s.length() < LENGTH_OF_STRING-1) {
             // If the last pointer was a mutable index, change the index to a whitespace.
-            if(isLastIndexMutable()) {
-                // NOTE: last_pointer is changed here to the current pointer. Beware!
-                mLastPointer = Selection.getSelectionStart(s);
+            if(isLastPointerMutable()) {
+                int mCurPointer = Selection.getSelectionStart(s);
 
-                CharSequence newNumber = s.subSequence(0, mLastPointer) +
+                CharSequence newNumber = s.subSequence(0, mCurPointer) +
                         EMPTY_CHARACTER_PLACEHOLDER
-                        + s.subSequence(mLastPointer, s.length());
+                        + s.subSequence(mCurPointer, s.length());
 
                 editView.setText(newNumber);
-                Selection.setSelection(editView.getText(), mLastPointer);
+                Selection.setSelection(editView.getText(), mCurPointer);
                 // Update the array index to the pointer where last pointer is currently.
-                mArrayIdx = search(mLastPointer);
+                mArrayIdx = search(mCurPointer);
             }
             // Corner case when the user presses backspace from one bracket group's start position
             // In this case, bring the pointer to the last position in the earlier bracket group.
@@ -260,7 +260,7 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
         editView.addTextChangedListener(this);
     }
 
-    // In a phone number, if the selection pointer is at the following (|) places in (I),
+    // In a phone number, if the selection pointer is at the following "|" places in (I),
     // then hitting up a backspace should delete the character and put
     // EMPTY_CHARACTER_PLACEHOLDER in the place.
     // (I) -- +1 (1|2|3|) 4|5|6|-7|8|9|0|
@@ -269,8 +269,8 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
     //            ^   ^  ^   ^ ^    ^
     // Each pair of these caret in (II) represents the start and end index of a group.
     // Thus, the following function returns true if the selection pointer is at
-    // any of the above places listed in (I).
-    private boolean isLastIndexMutable() {
+    // any of the above "|" places listed in (I).
+    private boolean isLastPointerMutable() {
         return  (  mLastPointer >= FIRST_GROUP_START_INDEX + 1
                 &&   mLastPointer <= FIRST_GROUP_END_INDEX ) ||
                 ( mLastPointer >= SECOND_GROUP_START_INDEX + 1 &&
