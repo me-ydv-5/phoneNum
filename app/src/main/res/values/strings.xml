@@ -1,4 +1,3 @@
 <resources>
     <string name="app_name">phoneNum</string>
-    <string name="phone_format">+1\u0020(\u0020\u0020\u0020)\u0020\u0020\u0020\u0020-\u0020\u0020\u0020\u0020</string>
 </resources>

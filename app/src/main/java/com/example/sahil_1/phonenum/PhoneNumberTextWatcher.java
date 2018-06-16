@@ -51,7 +51,7 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
     private SpannableString spannable;
 
     public PhoneNumberTextWatcher (EditText v) {
-        editView = v;
+        this.editView = v;
 
         editView.setText("+1 (XXX) XXX-XXXX");
 
