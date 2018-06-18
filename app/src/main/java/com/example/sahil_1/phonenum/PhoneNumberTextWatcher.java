@@ -11,6 +11,13 @@ import android.widget.EditText;
 
 import java.util.Arrays;
 
+/*
+    TODO -
+        Create a gradle package for the same
+
+
+ */
+
 public final class PhoneNumberTextWatcher implements TextWatcher {
     // editView is the View that is being used for the template.
     private EditText editView;
@@ -235,7 +242,8 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
 
                 mArrayIdx = search(mLastPointer)-1;
 
-                CharSequence newNumber = editView.getText().toString().substring(0, sIndexArray[mArrayIdx])
+                CharSequence newNumber = editView.getText()
+                        .toString().substring(0, sIndexArray[mArrayIdx])
                         + EMPTY_CHARACTER_PLACEHOLDER
                         + editView.getText().toString().substring(sIndexArray[mArrayIdx] + 1);
 
