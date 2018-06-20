@@ -15,7 +15,7 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
     // editView is the View that is being used for the template.
     private EditText editView;
 
-    private static final String PLACEHOLDER_TEXT = "(XXX) XXX-XXXX";
+    private static final String PLACEHOLDER_TEXT = "(123) 456-7890";
     private static final String EMPTY_CHARACTER_PLACEHOLDER = "X";
 
     // This is length() + 1 because we are keeping one index as buffer
@@ -112,13 +112,36 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
 
     @Override
     public void afterTextChanged(Editable s) {
-
         editView.removeTextChangedListener(this);
-//        if (s.length() < mCurrentLength) {
-//            --mCurrentLength;
-//            editView.setText(s.toString());
-//            Selection.setSelection(editView.getText(), mLastPointer - 1);
-//        }
+        int currentPointer = Selection.getSelectionStart(s);
+        Log.d("current",Integer.toString(currentPointer));
+        Log.d("mlasLength",Integer.toString(mLastPointer));
+
+        if (currentPointer < mLastPointer) {
+            if(mLastPointer == FIRST_GROUP_START_INDEX+1) {
+                mCurrentLength -= 2;
+                editView.setText("");
+                Selection.setSelection(editView.getText(), 0);
+            }
+            else if (mLastPointer == SECOND_GROUP_START_INDEX+1) {
+                mCurrentLength -= 3;
+                CharSequence newPhoneNumber = spannable.toString().substring(0,FIRST_GROUP_END_INDEX);
+                editView.setText(newPhoneNumber);
+                Selection.setSelection(editView.getText(), FIRST_GROUP_END_INDEX);
+            }
+            else if (mLastPointer == THIRD_GROUP_START_INDEX+1) {
+                mCurrentLength -= 2;
+                CharSequence newPhoneNumber = spannable.toString().substring(0,SECOND_GROUP_END_INDEX);
+                editView.setText(newPhoneNumber);
+                Selection.setSelection(editView.getText(), SECOND_GROUP_END_INDEX);
+            }
+            else {
+                --mCurrentLength;
+                CharSequence newPhoneNumber = s.toString().substring(0, mCurrentLength);
+                editView.setText(newPhoneNumber.toString());
+                Selection.setSelection(editView.getText(), currentPointer);
+            }
+        }
 //        // If user tries to select the string and delete all at once, nothing would
 //        // happen because the string has been restored and the pointer is again at
 //        // first mutable index.
