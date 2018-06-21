@@ -1,5 +1,6 @@
 package com.example.sahil_1.phonenum;
 
+import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
 import android.text.Selection;
 import android.text.SpannableString;
@@ -9,14 +10,16 @@ import android.text.style.RelativeSizeSpan;
 import android.util.Log;
 import android.widget.EditText;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Arrays;
+import java.util.Locale;
 
 public final class PhoneNumberTextWatcher implements TextWatcher {
     // editView is the View that is being used for the template.
     private EditText editView;
 
     private static final String PLACEHOLDER_TEXT = "(123) 456-7890";
-    private static final String EMPTY_CHARACTER_PLACEHOLDER = "X";
 
     // This is length() + 1 because we are keeping one index as buffer
     // to accommodate any new character that is entered. Later we again
@@ -30,7 +33,7 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
     // in the idxArray which is the array for keeping the mutable indexes
     // in the template, i.e, the fields where user can WRITE.
     private int mLastPointer = 0;
-    private int mArrayIdx = 0;
+    private String mAddBlock;
 
 
     private static final int FIRST_GROUP_START_INDEX = 1;
@@ -87,8 +90,6 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
 
         if(s.length() > mCurrentLength) {
 
-            String mAddBlock;
-
             if(mLastPointer == FIRST_GROUP_START_INDEX-1)
                 mAddBlock = "(";
             else if (mLastPointer == FIRST_GROUP_END_INDEX)
@@ -112,137 +113,51 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
 
     @Override
     public void afterTextChanged(Editable s) {
-        editView.removeTextChangedListener(this);
-        int currentPointer = Selection.getSelectionStart(s);
-        Log.d("current",Integer.toString(currentPointer));
-        Log.d("mlasLength",Integer.toString(mLastPointer));
 
-        if (currentPointer < mLastPointer) {
-            if(mLastPointer == FIRST_GROUP_START_INDEX+1) {
-                mCurrentLength -= 2;
-                editView.setText("");
-                Selection.setSelection(editView.getText(), 0);
+        editView.removeTextChangedListener(this);
+
+        int mcurrentPointer = Selection.getSelectionStart(s);
+
+        if (mcurrentPointer < mLastPointer) {
+            if(isLastPointerDeletable()) {
+            String phoneNumberDigits = s.toString().replaceAll("[^0-9]", "");
+
+            StringBuilder newPhoneNumber = new StringBuilder();
+            int pivot = 0;
+            for(int i = 0; i < phoneNumberDigits.length(); i++) {
+                if(pivot == FIRST_GROUP_START_INDEX-1)
+                    mAddBlock = "(";
+                else if (pivot == FIRST_GROUP_END_INDEX)
+                    mAddBlock = ") ";
+                else if(pivot == SECOND_GROUP_END_INDEX)
+                    mAddBlock = "-";
+                else
+                    mAddBlock = "";
+                newPhoneNumber.append(mAddBlock);
+                newPhoneNumber.append(phoneNumberDigits.charAt(i));
+                pivot += mAddBlock.length()+1;
             }
-            else if (mLastPointer == SECOND_GROUP_START_INDEX+1) {
-                mCurrentLength -= 3;
-                CharSequence newPhoneNumber = spannable.toString().substring(0,FIRST_GROUP_END_INDEX);
-                editView.setText(newPhoneNumber);
-                Selection.setSelection(editView.getText(), FIRST_GROUP_END_INDEX);
-            }
-            else if (mLastPointer == THIRD_GROUP_START_INDEX+1) {
-                mCurrentLength -= 2;
-                CharSequence newPhoneNumber = spannable.toString().substring(0,SECOND_GROUP_END_INDEX);
-                editView.setText(newPhoneNumber);
-                Selection.setSelection(editView.getText(), SECOND_GROUP_END_INDEX);
+            mCurrentLength = newPhoneNumber.length();
+            editView.setText(newPhoneNumber);
+
+            if(mCurrentLength >= mcurrentPointer)
+                Selection.setSelection(editView.getText(),mcurrentPointer);
+            else Selection.setSelection(editView.getText(),mCurrentLength);
             }
             else {
-                --mCurrentLength;
-                CharSequence newPhoneNumber = s.toString().substring(0, mCurrentLength);
-                editView.setText(newPhoneNumber.toString());
-                Selection.setSelection(editView.getText(), currentPointer);
+                editView.setText(spannable.toString());
+                Selection.setSelection(editView.getText(),mcurrentPointer);
             }
+            // Remove the span applied in the beforeTextChanged callback. Even I don't know
+            // why I did this. Let me know if you get some explanation about this.
+            spannable.removeSpan(span);
+            span = null;
+            spannable = null;
         }
-//        // If user tries to select the string and delete all at once, nothing would
-//        // happen because the string has been restored and the pointer is again at
-//        // first mutable index.
-//        // Example: If user 'SELECT ALL' the string and hit backspace, more than two
-//        // characters are being deleted at that moment, which it avoid by this.
-//        if(s.length() <= LENGTH_OF_STRING-2) {
-//            // Sets the pointer index in sIndexArray to be the zeroth index.
-//            mArrayIdx = 0;
-//
-//            // Restores the string to earlier one
-//            editView.setText(spannable.toString());
-//
-//            // Sets the selection to first mutable index (because we set the pointer)
-//            // to zeroth index above.
-//            Selection.setSelection(editView.getText(), FIRST_GROUP_START_INDEX);
-//        }
-//
-//        // If only one character has been deleted, replace the character with an
-//        // EMPTY_CHARACTER_PLACEHOLDER if the character was a mutable one,
-//        // else restore the earlier string, i.e, do nothing.
-//        //
-//        // Example (| denotes the selection pointer):
-//        // Earlier string: +1 (123) 456-78|90   => Current Pointer index = 15.
-//        // After deletion: +1 (123) 456-7|X90   => mLastPointer will be taken as 15
-//        //                                         because mLastPointer is the one being
-//        //                                         assigned beforeTextChanged (L82).
-//        // (This is the reason it is being called as mLastPointer, it is NOT current!)
-//        //
-//        // else if the pointer is at the start of a group, then bring it in the previous
-//        // group.
-//        //
-//        // Example:
-//        // Earlier String: +1 (123) |456-7890   => Current pointer index = 9.
-//        // After Deletion: +1 (12|X) 456-7890   => mLastPointer will be taken as 9
-//        //                                         as explained above.
-//        //
-//        // else leave everything as it is. (the selection is at any other place than the
-//        // above two cases)
-//        //
-//        // Example:
-//        // Earlier String: +1| (123) 456-7890   => Trying to delete "1" in country code.
-//        // After Deletion: +1| (123) 456-7890   => Selection is at the same place, no changes.
-//
-//        if (s.length() < LENGTH_OF_STRING-1) {
-//            // If the last pointer was a mutable index, change the index to a whitespace.
-//            if(isLastPointerDeletable()) {
-//                int mCurPointer = Selection.getSelectionStart(s);
-//
-//                CharSequence newNumber = s.subSequence(0, mCurPointer) +
-//                        EMPTY_CHARACTER_PLACEHOLDER
-//                        + s.subSequence(mCurPointer, s.length());
-//
-//                editView.setText(newNumber);
-//                Selection.setSelection(editView.getText(), mCurPointer);
-//                // Update the array index to the pointer where last pointer is currently.
-//                mArrayIdx = search(mCurPointer);
-//            }
-//            // Corner case when the user presses backspace from one bracket group's start position
-//            // In this case, bring the pointer to the last position in the earlier bracket group.
-//            else if(mLastPointer ==SECOND_GROUP_START_INDEX
-//                || mLastPointer == THIRD_GROUP_START_INDEX) {
-//
-//                editView.setText(spannable.toString());
-//
-//                mArrayIdx = search(mLastPointer)-1;
-//
-//                CharSequence newNumber = editView.getText().toString().substring(0, sIndexArray[mArrayIdx])
-//                        + EMPTY_CHARACTER_PLACEHOLDER
-//                        + editView.getText().toString().substring(sIndexArray[mArrayIdx] + 1);
-//
-//                editView.setText(newNumber);
-//                Selection.setSelection(editView.getText(), sIndexArray[mArrayIdx]);
-//            }
-//
-//            // Do not change the string at all. Keep the pointer intact (Don't move it to the
-//            // first mutable index).
-//            else {
-//                editView.setText(spannable.toString());
-//                Selection.setSelection(editView.getText(), mLastPointer);
-//            }
-//        }
-//
-//        // Remove the span applied in the beforeTextChanged callback. Even I don't know
-//        // why I did this. Let me know if you get some explanation about this.
-//        spannable.removeSpan(span);
-//        span = null;
-//        spannable = null;
 
         editView.addTextChangedListener(this);
     }
 
-    // In a phone number, if the selection pointer is at the following "|" places in (I),
-    // then hitting up a backspace should delete the character and put
-    // EMPTY_CHARACTER_PLACEHOLDER in the place.
-    // (I) -- +1 (1|2|3|) 4|5|6|-7|8|9|0|
-    //
-    // (II)-- +1 (*123*) *456*-*7890*
-    //            ^   ^  ^   ^ ^    ^
-    // Each pair of these caret in (II) represents the start and end index of a group.
-    // Thus, the following function returns true if the selection pointer is at
-    // any of the above "|" places listed in (I).
     private boolean isLastPointerDeletable() {
         return  (  mLastPointer >= FIRST_GROUP_START_INDEX + 1
                 &&   mLastPointer <= FIRST_GROUP_END_INDEX ) ||
