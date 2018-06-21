@@ -87,7 +87,6 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
     public void onTextChanged(CharSequence s, int i, int i1, int i2) {
         // Remove the listener to avoid infinite loop or crash in memory location.
         editView.removeTextChangedListener(this);
-
         if(s.length() > mCurrentLength) {
 
             if(mLastPointer == FIRST_GROUP_START_INDEX-1)
@@ -116,15 +115,13 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
 
         editView.removeTextChangedListener(this);
 
-        int mcurrentPointer = Selection.getSelectionStart(s);
-
-        if (mcurrentPointer < mLastPointer) {
+        int mCurrentPointer = Selection.getSelectionStart(s);
+        if (mCurrentPointer <= mLastPointer) {
             if(isLastPointerDeletable()) {
-            String phoneNumberDigits = s.toString().replaceAll("[^0-9]", "");
-
+            String unformattedString = s.toString().replaceAll("[^0-9]", "");
             StringBuilder newPhoneNumber = new StringBuilder();
             int pivot = 0;
-            for(int i = 0; i < phoneNumberDigits.length(); i++) {
+            for(int i = 0; i < unformattedString.length(); i++) {
                 if(pivot == FIRST_GROUP_START_INDEX-1)
                     mAddBlock = "(";
                 else if (pivot == FIRST_GROUP_END_INDEX)
@@ -134,19 +131,19 @@ public final class PhoneNumberTextWatcher implements TextWatcher {
                 else
                     mAddBlock = "";
                 newPhoneNumber.append(mAddBlock);
-                newPhoneNumber.append(phoneNumberDigits.charAt(i));
+                newPhoneNumber.append(unformattedString.charAt(i));
                 pivot += mAddBlock.length()+1;
             }
             mCurrentLength = newPhoneNumber.length();
             editView.setText(newPhoneNumber);
 
-            if(mCurrentLength >= mcurrentPointer)
-                Selection.setSelection(editView.getText(),mcurrentPointer);
+            if(mCurrentLength >= mCurrentPointer)
+                Selection.setSelection(editView.getText(),mCurrentPointer);
             else Selection.setSelection(editView.getText(),mCurrentLength);
             }
             else {
                 editView.setText(spannable.toString());
-                Selection.setSelection(editView.getText(),mcurrentPointer);
+                Selection.setSelection(editView.getText(),mCurrentPointer);
             }
             // Remove the span applied in the beforeTextChanged callback. Even I don't know
             // why I did this. Let me know if you get some explanation about this.
